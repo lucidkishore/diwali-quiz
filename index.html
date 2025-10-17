@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>दीवाली क्विज स्पिन गेम</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 50%, #ff99ac 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 10px #ffeb3b;
+            }
+            to {
+                text-shadow: 3px 3px 6px rgba(0,0,0,0.3), 0 0 20px #ffeb3b, 0 0 30px #ff9800;
+            }
+        }
+
+        .game-box {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+
+        .wheel-area {
+            position: relative;
+            margin: 30px auto;
+        }
+
+        .spin-wheel {
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+            border-radius: 50%;
+            border: 8px solid #ff6a88;
+            background: conic-gradient(
+                from 0deg,
+                #ff6a88 0deg 72deg,
+                #ffeb3b 72deg 144deg,
+                #4caf50 144deg 216deg,
+                #2196f3 216deg 288deg,
+                #9c27b0 288deg 360deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+
+        .wheel-center {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            border: 5px solid #ff6a88;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 50px solid #ff6a88;
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.3));
+            z-index: 10;
+        }
+
+        .spin-btn {
+            background: linear-gradient(135deg, #ff6a88 0%, #ff9a56 100%);
+            color: white;
+            border: none;
+            padding: 18px 60px;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px 0;
+            box-shadow: 0 8px 20px rgba(255, 106, 136, 0.4);
+            transition: all 0.3s;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(255, 106, 136, 0.6);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .question-box {
+            display: none;
+            margin-top: 30px;
+            text-align: left;
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 3px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+        }
+
+        .option:hover {
+            border-color: #ff6a88;
+            background: #fff5f7;
+            transform: translateX(8px);
+        }
+
+        .option.selected {
+            background: #ff6a88;
+            color: white;
+            border-color: #ff6a88;
+        }
+
+        .option.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .option.wrong {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .answer-box {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 12px;
+            border-left: 5px solid #4caf50;
+        }
+
+        .answer-box.show {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        .correct-answer {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        .btn-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .submit-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .next-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .next-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .progress-bar {
+            margin: 20px 0;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+
+        .progress-text {
+            font-size: 1.2em;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .completion-message {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border-radius: 20px;
+            color: white;
+            font-size: 1.5em;
+            font-weight: bold;
+            animation: bounce 0.6s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .game-box {
+                padding: 25px;
+            }
+
+            .spin-wheel {
+                width: 200px;
+                height: 200px;
+            }
+
+            .wheel-center {
+                width: 80px;
+                height: 80px;
+                font-size: 2em;
+            }
+
+            .spin-btn {
+                padding: 15px 40px;
+                font-size: 1.2em;
+            }
+
+            .question-text {
+                font-size: 1.1em;
+            }
+
+            .option {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪔 दीपावली प्रश्न-उत्तर स्पिन गेम 🪔</h1>
+        
+        <div class="game-box">
+            <div class="progress-bar">
+                <p class="progress-text">प्रश्न: <span id="currentQ">0</span> / <span id="totalQ">5</span></p>
+            </div>
+
+            <div class="wheel-area">
+                <div class="pointer"></div>
+                <div class="spin-wheel" id="spinWheel">
+                    <div class="wheel-center">🎯</div>
+                </div>
+            </div>
+            
+            <button class="spin-btn" id="spinBtn">स्पिन करें! 🎡</button>
+            
+            <div class="question-box" id="questionBox">
+                <div class="question-text" id="questionText"></div>
+                <div class="options" id="optionsContainer"></div>
+                
+                <div class="answer-box" id="answerBox">
+                    <p class="correct-answer">✅ सही उत्तर: <span id="correctAnswerText"></span></p>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn submit-btn" id="submitBtn">उत्तर जाँचें</button>
+                    <button class="btn next-btn" id="nextBtn" style="display:none;">अगला प्रश्न →</button>
+                </div>
+            </div>
+
+            <div class="completion-message" id="completionMsg">
+                🎉 सभी प्रश्न दिखा दिए गए हैं!<br>खेलने के लिए धन्यवाद। 🙏
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz Questions Array
+        const quizQuestions = [{"question":"धनतेरस के दिन, किस भगवान की पूजा की जाती है जो समुद्र मंथन से प्रकट हुए थे और उन्हें देवताओं के चिकित्सक (Physician) की उपाधि प्राप्त है?","options":["A. विश्वकर्मा","B. धन्वन्तरि","C. कुबेर","D. इंद्र"],"correctAnswer":"B. धन्वन्तरि"},{"question":"दीपावली के दिन किस भगवान की पूजा की जाती है?","options":["A. गणेश जी","B. कुबेर जी","C. विष्णु जी","D. ब्रह्मा जी"],"correctAnswer":"A. गणेश जी"},{"question":"दीपावली के दौरान, व्यापारी समुदाय द्वारा बही-खातों की पूजा की जाती है, जिसे किस नाम से जाना जाता है?","options":["A. लक्ष्मी पूजा","B. कलम पूजा","C. चोपड़ा पूजा","D. वाणिज्य पूजा"],"correctAnswer":"C. चोपड़ा पूजा"},{"question":"दीपावली के दिन किस पक्षी को देखना शुभ माना जाता है?","options":["A. कौआ","B. उल्लू","C. कबूतर","D. तोता"],"correctAnswer":"B. उल्लू"},{"question":"दीपावली किस महीने में आती है?","options":["A. चैत्र","B. कार्तिक","C. माघ","D. फाल्गुन"],"correctAnswer":"B. कार्तिक"},{"question":"भगवान राम, सीता और लक्ष्मण के अयोध्या लौटने की कथा रामायण के किस काण्ड से संबंधित है?","options":["A. किष्किन्धा काण्ड","B. अरण्य काण्ड","C. उत्तर काण्ड","D. युद्ध काण्ड"],"correctAnswer":"D. उत्तर काण्ड"},{"question":"दीपावली से संबंधित विक्रम-आदित्य की कथा किस भारतीय प्रांत के नए साल की शुरुआत से जुड़ी है?","options":["A. महाराष्ट्र","B. पंजाब","C. गुजरात","D. बंगाल"],"correctAnswer":"C. गुजरात"},{"question":"दीपावली पर गोवर्धन पूजा के दिन, भगवान कृष्ण ने किस देवता के अहंकार को नष्ट किया था?","options":["A. ब्रह्मा","B. शिव","C. इंद्र","D. वरुण"],"correctAnswer":"C. इंद्र"},{"question":"भगवान राम के वनवास से लौटने के बाद, अयोध्या में कितने दिनों तक उत्सव मनाया गया था?","options":["A. तीन दिन","B. पाँच दिन","C. सात दिन","D. पंद्रह दिन"],"correctAnswer":"B. पाँच दिन"},{"question":"पौराणिक कथाओं के अनुसार, दीपावली के दिन पांडवों का अज्ञातवास कितने वर्ष बाद समाप्त हुआ था?","options":["A. 12 वर्ष","B. 13 वर्ष","C. 14 वर्ष","D. 15 वर्ष"],"correctAnswer":"B. 13 वर्ष"},{"question":"दीपावली के दिन लक्ष्मी पूजा के लिए, किस मुद्रा में बैठी हुई देवी लक्ष्मी की मूर्ति शुभ मानी जाती है?","options":["A. खड़ी हुई","B. लेटी हुई","C. कमल पर बैठी हुई","D. सिंहासन पर बैठी हुई"],"correctAnswer":"C. कमल पर बैठी हुई"},{"question":"दीपावली के दौरान, किस पक्ष की अमावस्या को 'महालक्ष्मी' की पूजा की जाती है?","options":["A. शुक्ल पक्ष","B. कृष्ण पक्ष","C. पूर्णिमा","D. प्रतिपदा"],"correctAnswer":"B. कृष्ण पक्ष"},{"question":"दीपावली किस देवता की पूजा के लिए मनाई जाती है?","options":["A. श्रीराम","B. लक्ष्मी माता","C. गणेश जी","D. हनुमान जी"],"correctAnswer":"B. लक्ष्मी माता"},{"question":"दीपावली कितने दिनों तक मनाई जाती है?","options":["A. 3 दिन","B. 4 दिन","C. 5 दिन","D. 7 दिन"],"correctAnswer":"C. 5 दिन"},{"question":"दीपावली किस महीने में आती है?","options":["A. चैत्र","B. भाद्रपद","C. कार्तिक","D. फाल्गुन"],"correctAnswer":"C. कार्तिक"},{"question":"दीपावली के दिन दीप जलाने की परंपरा किस युग से मानी जाती है?","options":["A. त्रेता युग","B. द्वापर युग","C. सत्य युग","D. कलियुग"],"correctAnswer":"A. त्रेता युग"},{"question":"दीपावली का त्योहार किस देश में भी मनाया जाता है?","options":["A. नेपाल","B. जापान","C. फ्रांस","D. रूस"],"correctAnswer":"A. नेपाल"},{"question":"दीपावली का कौन-सा पर्व 'अन्नकूट' के नाम से प्रसिद्ध है?","options":["A. गोवर्धन पूजा","B. धनतेरस","C. छोटी दिवाली","D. भैया दूज"],"correctAnswer":"A. गोवर्धन पूजा"},{"question":"रामायण के अनुसार, जब रावण ने सीता का अपहरण किया था, तब राम, सीता और लक्ष्मण अपने वनवास के दौरान किस वन में रहते थे?","options":["A. दंडकारण्य वन","B. नैमिषारण्य वन","C. मधुवन","D. चित्रकूट वन"],"correctAnswer":"A. दंडकारण्य वन"},{"question":"धनतेरस का त्योहार किस दिव्य चिकित्सक और भगवान विष्णु के अवतार की पूजा के लिए समर्पित है?","options":["A. चरक","B. सुश्रुत","C. धन्वंतरि","D. पतंजलि"],"correctAnswer":"C. धन्वंतरि"},{"question":"जैन धर्म में, दीपावली किस तीर्थंकर के मोक्ष (निर्वाण) के उपलक्ष्य में मनाई जाती है?","options":["A. ऋषभनाथ","B. पार्श्वनाथ","C. महावीर","D. अजितनाथ"],"correctAnswer":"C. महावीर"},{"question":"'अष्ट लक्ष्मी' (लक्ष्मी के आठ रूप) में से किस रूप की पूजा मुख्य रूप से दीपावली पर धन और समृद्धि के लिए की जाती है?","options":["A. धन लक्ष्मी","B. गज लक्ष्मी","C. विजय लक्ष्मी","D. आदि लक्ष्मी"],"correctAnswer":"A. धन लक्ष्मी"},{"question":"यम और उनकी बहन यमी की कथा दीपावली के किस दिन से जुड़ी है?","options":["A. धनतेरस","B. छोटी दीवाली","C. गोवर्धन पूजा","D. भाई दूज"],"correctAnswer":"D. भाई दूज"},{"question":"'समुद्र मंथन' की कहानी दीपावली के दौरान मनाए जाने वाले किन दो पात्रों के प्राकट्य से जुड़ी है?","options":["A. भगवान राम और सीता","B. भगवान कृष्ण और राधा","C. देवी लक्ष्मी और भगवान धन्वंतरि","D. भगवान शिव और पार्वती"],"correctAnswer":"C. देवी लक्ष्मी और भगवान धन्वंतरि"},{"question":"लक्ष्मी और गणेश के अलावा, धन के लिए दीपावली पर देवताओं के कोषाध्यक्ष, किस अन्य देवता की भी पूजा की जाती है?","options":["A. इंद्र","B. अग्नि","C. कुबेर","D. वायु"],"correctAnswer":"C. कुबेर"},{"question":"दीपावली के दौरान तैयार किए गए उत्सव के भोजन के लिए क्या शब्द है, जिसे अक्सर परिवार और दोस्तों के साथ साझा किया जाता है?","options":["A. प्रसाद","B. भोग","C. दावत","D. लंगर"],"correctAnswer":"C. दावत"},{"question":"निम्नलिखित में से कौन सा दीपावली के पारंपरिक 'पांच दिनों' में से एक नहीं है?","options":["A. धनतेरस","B. गोवर्धन पूजा","C. भाई दूज","D. दशहरा"],"correctAnswer":"D. दशहरा"},{"question":"भारत में कंपनियों द्वारा दीपावली के दौरान कर्मचारियों को दिए जाने वाले वित्तीय बोनस को क्या कहा जाता है?","options":["A. वेतन","B. ग्रेच्युटी","C. दिवाली बोनस","D. वेतन वृद्धि"],"correctAnswer":"C. दिवाली बोनस"},{"question":"महाकाव्य महाभारत में, कौन सी घटना कभी-कभी दीपावली की अवधि से जुड़ी होती है?","options":["A. चौसर का खेल","B. पांडवों का 13 साल के वनवास से लौटना","C. कुरुक्षेत्र युद्ध की शुरुआत","D. कर्ण का जन्म"],"correctAnswer":"B. पांडवों का 13 साल के वनवास से लौटना"},{"question":"उल्लू दिवाली के दौरान पूजे जाने वाले किस देवता का 'वाहन' है?","options":["A. भगवान गणेश","B. देवी सरस्वती","C. भगवान कुबेर","D. देवी लक्ष्मी"],"correctAnswer":"D. देवी लक्ष्मी"},{"question":"गोवर्धन पूजा के दिन बनाए जाने वाले 'अन्नकूट' में पारंपरिक रूप से कितनी तरह की सामग्रियों का प्रयोग करने की प्रथा है?","options":["A. 11","B. 21","C. 36","D. 56"],"correctAnswer":"D. 56"},{"question":"समुद्र मंथन के दौरान देवी लक्ष्मी के प्रकट होने से ठीक पहले कौन सा रत्न निकला था?","options":["A. पारिजात वृक्ष","B. कौस्तुभ मणि","C. ऐरावत हाथी","D. चंद्रमा"],"correctAnswer":"B. कौस्तुभ मणि"},{"question":"चौपड़ा पूजन के दौरान, नए खाता-बही पर स्वस्तिक के चिन्ह के साथ क्या लिखा जाता है?","options":["A. ॐ श्री गणेशाय नमः","B. जय माता दी","C. शुभ लाभ","D. श्री राम जय राम"],"correctAnswer":"C. शुभ लाभ"},{"question":"गोवर्धन पर्वत को अपनी किस उंगली पर भगवान कृष्ण ने उठाया था?","options":["A. तर्जनी (Index finger)","B. मध्यमा (Middle finger)","C. अंगूठा (Thumb)","D. कनिष्ठा (Little finger)"],"correctAnswer":"D. कनिष्ठा (Little finger)"},{"question":"किस देश में दिवाली एक राजपत्रित अवकाश है और वहां के संसद भवन को भी इस अवसर पर सजाया जाता है?","options":["A. इंडोनेशिया","B. मलेशिया","C. सिंगापुर","D. कनाडा"],"correctAnswer":"C. सिंगापुर"},{"question":"रावण वध और राम के अयोध्या लौटने के बीच कितना समय लगा था?","options":["A. 7 दिन","B. 21 दिन","C. 1 महीना","D. 3 महीने"],"correctAnswer":"B. 21 दिन"},{"question":"रामायण के अनुसार, अयोध्या वापस आते समय भगवान राम ने अपनी पहली रात कहाँ बिताई थी?","options":["A. श्रृंगवेरपुर","B. प्रयागराज (भारद्वाज आश्रम)","C. चित्रकूट","D. नंदीग्राम"],"correctAnswer":"B. प्रयागराज (भारद्वाज आश्रम)"}];
+
+        let availableQuestions = [...quizQuestions];
+        let currentQuestion = null;
+        let isSpinning = false;
+        let selectedOption = null;
+        let questionsAnswered = 0;
+
+        $(document).ready(function() {
+            updateProgress();
+
+            // Spin Button Click
+            $('#spinBtn').click(function() {
+                if (isSpinning || availableQuestions.length === 0) return;
+
+                isSpinning = true;
+                $(this).prop('disabled', true);
+                $('#questionBox').hide();
+                $('#answerBox').removeClass('show');
+
+                // Spin animation
+                const randomRotation = 360 * 8 + Math.random() * 360;
+                $('#spinWheel').css('transform', `rotate(${randomRotation}deg)`);
+
+                setTimeout(() => {
+                    showRandomQuestion();
+                    isSpinning = false;
+                    $('#spinWheel').css('transform', 'rotate(0deg)');
+                }, 3000);
+            });
+
+            // Submit Button Click
+            $('#submitBtn').click(function() {
+                if (!selectedOption) {
+                    alert('कृपया एक विकल्प चुनें! 🙏');
+                    return;
+                }
+                checkAnswer();
+            });
+
+            // Next Button Click
+            $('#nextBtn').click(function() {
+                resetForNextQuestion();
+            });
+
+            // Option Click Handler
+            $(document).on('click', '.option', function() {
+                if ($(this).hasClass('correct') || $(this).hasClass('wrong')) return;
+                
+                $('.option').removeClass('selected');
+                $(this).addClass('selected');
+                selectedOption = $(this).text();
+            });
+        });
+
+        function showRandomQuestion() {
+            if (availableQuestions.length === 0) {
+                $('#completionMsg').show();
+                $('#spinBtn').hide();
+                return;
+            }
+
+            // Select random question
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            currentQuestion = availableQuestions[randomIndex];
+            availableQuestions.splice(randomIndex, 1);
+
+            questionsAnswered++;
+            updateProgress();
+
+            // Display question
+            $('#questionText').text(currentQuestion.question);
+            
+            // Display options
+            let optionsHtml = '';
+            currentQuestion.options.forEach(option => {
+                optionsHtml += `<div class="option">${option}</div>`;
+            });
+            $('#optionsContainer').html(optionsHtml);
+            
+            // Reset states
+            $('#answerBox').removeClass('show');
+            $('#submitBtn').show();
+            $('#nextBtn').hide();
+            selectedOption = null;
+
+            $('#questionBox').fadeIn(500);
+        }
+
+        function checkAnswer() {
+            const isCorrect = selectedOption === currentQuestion.correctAnswer;
+            
+            // Mark options
+            $('.option').each(function() {
+                const optionText = $(this).text();
+                if (optionText === currentQuestion.correctAnswer) {
+                    $(this).addClass('correct');
+                } else if (optionText === selectedOption && !isCorrect) {
+                    $(this).addClass('wrong');
+                }
+                $(this).css('cursor', 'default');
+            });
+
+            // Show correct answer
+            $('#correctAnswerText').text(currentQuestion.correctAnswer);
+            $('#answerBox').addClass('show');
+            
+            // Switch buttons
+            $('#submitBtn').hide();
+            $('#nextBtn').show();
+        }
+
+        function resetForNextQuestion() {
+            $('#questionBox').fadeOut(300, function() {
+                $('.option').removeClass('selected correct wrong');
+                $('#answerBox').removeClass('show');
+                $('#submitBtn').show();
+                $('#nextBtn').hide();
+                selectedOption = null;
+            });
+
+            $('#spinBtn').prop('disabled', false);
+
+            // Check if all questions done
+            if (availableQuestions.length === 0) {
+                setTimeout(() => {
+                    $('#completionMsg').fadeIn(500);
+                    $('#spinBtn').hide();
+                }, 500);
+            }
+        }
+
+        function updateProgress() {
+            $('#currentQ').text(questionsAnswered);
+            $('#totalQ').text(quizQuestions.length);
+        }
+    </script>
+</body>
+</html>
